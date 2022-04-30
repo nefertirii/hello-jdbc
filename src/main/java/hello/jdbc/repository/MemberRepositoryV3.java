@@ -17,10 +17,11 @@ import java.util.NoSuchElementException;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class MemberRepositoryV3 {
+public class MemberRepositoryV3 implements MemberRepositoryEx {
 
     private final DataSource dataSource;
 
+    @Override
     public Member save(Member member) throws SQLException {
         String sql = "insert into member (member_id, money) values (?, ?)";
 
@@ -42,6 +43,7 @@ public class MemberRepositoryV3 {
         }
     }
 
+    @Override
     public Member findById(String memberId) throws SQLException {
 
         String sql = "select * from member where member_id = ?";
@@ -73,6 +75,7 @@ public class MemberRepositoryV3 {
         }
     }
 
+    @Override
     public void update(String memberId, int money) throws SQLException {
 
         String sql = "update member set money = ? where member_id = ?";
@@ -95,6 +98,7 @@ public class MemberRepositoryV3 {
         }
     }
 
+    @Override
     public void delete(String memberId) throws SQLException {
 
         String sql = "delete from member where member_id = ?";
