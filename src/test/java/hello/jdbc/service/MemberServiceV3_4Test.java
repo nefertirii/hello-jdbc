@@ -1,8 +1,7 @@
 package hello.jdbc.service;
 
 import hello.jdbc.domain.Member;
-import hello.jdbc.repository.MemberRepository;
-import hello.jdbc.repository.MemberRepositoryV4_1;
+import hello.jdbc.repository.MemberRepositoryV3;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.assertj.core.api.Assertions;
@@ -16,29 +15,27 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 
 import javax.sql.DataSource;
+import java.sql.SQLException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * 예외 누수 문제 해결
- *  * SQLException 제거
- *  *
- *  * MemberRepository 인터페이스 의존
+ * 트랜잭션 - DataSource, TransactionManager 자동 등록
  */
 
 @Slf4j
 @SpringBootTest
-class MemberServiceV4Test {
+class MemberServiceV3_4Test {
 
     public static final String MEMBER_A = "memberA";
     public static final String MEMBER_B = "memberB";
     public static final String MEMBER_EX = "ex";
 
     @Autowired
-    private MemberRepository memberRepository;
+    private MemberRepositoryV3 memberRepository;
     @Autowired
-    private MemberServiceV4 memberService;
+    private MemberServiceV3_3 memberService;
 
     @RequiredArgsConstructor
     @TestConfiguration
@@ -47,18 +44,18 @@ class MemberServiceV4Test {
         private final DataSource dataSource;
 
         @Bean
-        MemberRepository memberRepositoryV4() {
-            return new MemberRepositoryV4_1(dataSource);
+        MemberRepositoryV3 memberRepositoryV3() {
+            return new MemberRepositoryV3(dataSource);
         }
 
         @Bean
-        MemberServiceV4 memberServiceV4() {
-            return new MemberServiceV4(memberRepositoryV4());
+        MemberServiceV3_3 memberServiceV3_3() {
+            return new MemberServiceV3_3(memberRepositoryV3());
         }
     }
 
     @AfterEach
-    void after() {
+    void after() throws SQLException {
         memberRepository.delete(MEMBER_A);
         memberRepository.delete(MEMBER_B);
         memberRepository.delete(MEMBER_EX);
@@ -66,7 +63,7 @@ class MemberServiceV4Test {
 
     @Test
     @DisplayName("정상 이체")
-    void accountTransfer() {
+    void accountTransfer() throws SQLException {
         // given
         Member memberA = new Member(MEMBER_A, 10000);
         Member memberB = new Member(MEMBER_B, 10000);
@@ -87,7 +84,7 @@ class MemberServiceV4Test {
 
     @Test
     @DisplayName("이체중 예외 발생")
-    void accountTransferEx() {
+    void accountTransferEx() throws SQLException {
         // given
         Member memberA = new Member(MEMBER_A, 10000);
         Member memberEx = new Member(MEMBER_EX, 10000);
